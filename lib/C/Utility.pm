@@ -31,7 +31,7 @@ require Exporter;
 use warnings;
 use strict;
 
-my $VERSION = '0.001';
+our $VERSION = '0.001';
 
 use Carp;
 use File::Spec;
