@@ -9,18 +9,30 @@ require Exporter;
 
 @ISA = qw(Exporter);
 
-@EXPORT_OK = qw/convert_to_c_string convert_to_c_string_pc
-		valid_c_variable hash_to_c_file ch_files
-		print_top_h_wrapper print_bottom_h_wrapper
-		escape_string line_directive c_to_h_name
-		brute_force_line add_lines/;
+@EXPORT_OK = qw/
+                   convert_to_c_string
+                   convert_to_c_string_pc
+                   valid_c_variable
+                   hash_to_c_file
+                   ch_files
+                   print_top_h_wrapper
+                   print_bottom_h_wrapper
+                   escape_string
+                   line_directive
+                   c_to_h_name
+                   brute_force_line
+                   add_lines
+               /;
 
 %EXPORT_TAGS = (
-    'all' => \@EXPORT_OK;
+    'all' => \@EXPORT_OK,
 );
 
 use warnings;
 use strict;
+
+my $VERSION = '0.001';
+
 use Carp;
 use File::Spec;
 
