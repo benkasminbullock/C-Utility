@@ -187,7 +187,9 @@ sub wrapper_name
 {
     my ($string) = @_;
     $string =~ s/[.-]/_/g;
-    die "Bad string '$string'" unless valid_c_variable ($string);
+    if (! valid_c_variable ($string)) {
+        croak "Bad string for wrapper '$string'";
+    }
     my $wrapper_name = uc $string;
     return $wrapper_name;
 }
@@ -214,10 +216,22 @@ sub print_top_h_wrapper
 {
     my ($fh, $file_name) = @_;
     my $wrapper_name = wrapper_name ($file_name);
-    print $fh <<EOF;
+    my $wrapper = <<EOF;
 #ifndef $wrapper_name
 #define $wrapper_name
 EOF
+    print_out ($fh, $wrapper);
+}
+
+sub print_out
+{
+    my ($fh, $wrapper) = @_;
+    if (ref $fh && ref $fh eq 'SCALAR') {
+        ${$fh} .= $wrapper;
+    }
+    else {
+        print $fh $wrapper;
+    }
 }
 
 =head2 print_bottom_h_wrapper
@@ -238,9 +252,10 @@ sub print_bottom_h_wrapper
 {
     my ($fh, $file_name) = @_;
     my $wrapper_name = wrapper_name ($file_name);
-    print $fh <<EOF;
+    my $wrapper = <<EOF;
 #endif /* $wrapper_name */
 EOF
+    print_out ($fh, $wrapper);
 }
 
 =head2 print_include
@@ -343,7 +358,7 @@ sub line_directive
     my ($output, $line_number, $file_name) = @_;
     die "$line_number is not a real line number"
 	unless $line_number =~ /^\d+$/;
-    print $output "#line $line_number \"$file_name\"\n";
+    print_out ($output, "#line $line_number \"$file_name\"\n");
 }
 
 =head2 brute_force_line
