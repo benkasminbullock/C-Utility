@@ -31,10 +31,11 @@ require Exporter;
 use warnings;
 use strict;
 
-our $VERSION = '0.002';
+our $VERSION = '0.003';
 
 use Carp;
 use File::Spec;
+use File::Versions 'make_backup';
 
 =head1 DESCRIPTION
 
@@ -86,6 +87,29 @@ sub convert_to_c_string
 	$text =~ s/(.+)$/"$1"/g;
     }
     return $text;
+}
+
+=head2 ch_files
+
+Make a .h filename from a .c filename. Back up both C and .h files.
+
+=cut
+
+sub ch_files
+{
+    my ($c_file_name) = @_;
+    if ($c_file_name !~ /\.c/) {
+       die "$c_file_name is not a C file name";
+    }
+    my $h_file_name = $c_file_name;
+    $h_file_name =~ s/\.c$/\.h/;
+    if (-f $c_file_name) {
+	make_backup ($c_file_name);
+    }
+    if (-f $h_file_name) {
+	make_backup ($h_file_name);
+    }
+    return $h_file_name;
 }
 
 =head2 convert_to_c_pc
@@ -328,11 +352,11 @@ sub hash_to_c_file
     print_top_h_wrapper ($h_out, $h_file_name);
     for my $variable (sort keys %$hash_ref) {
 	if (!valid_c_variable ($variable)) {
-	    die "bad variable $variable";
+	    croak "key '$variable' is not a valid C variable";
 	}
 	my $value = $hash_ref->{$variable};
-	$value = escape_string ($value);
-	print $c_out "const char * $prefix$variable = \"$value\";\n";
+	$value = convert_to_c_string ($value);
+	print $c_out "const char * $prefix$variable = $value;\n";
 	print $h_out "extern const char * $prefix$variable; /* $value */\n";
     }
     close $c_out or die $!;
