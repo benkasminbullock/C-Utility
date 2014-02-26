@@ -9,6 +9,7 @@ WriteMakefile (
     NAME => 'C::Utility',
     VERSION_FROM => $pm,
     ABSTRACT_FROM => $pm,
+    EXE_FILES => ['script/make-c-text'],
     AUTHOR => 'Ben Bullock <bkb@cpan.org>',
     LICENSE => 'perl',
     PREREQ_PM => {
@@ -20,4 +21,6 @@ WriteMakefile (
             bugtracker => "$repo/issues",
         },
     },
+    # Passes 5.6.2 at CPANTESTERS as of version 0.003.
+    MIN_PERL_VERSION => '5.006001',
 );
