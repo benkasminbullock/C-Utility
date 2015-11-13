@@ -14,6 +14,7 @@ WriteMakefile (
     LICENSE => 'perl',
     PREREQ_PM => {
 	'File::Versions' => 0,
+	'File::Spec' => 0,
     },
     META_MERGE => {
         resources => {

@@ -23,6 +23,7 @@ require Exporter;
                    brute_force_line
                    add_lines
 		   remove_quotes
+		   linein lineout
                /;
 
 %EXPORT_TAGS = (
@@ -40,9 +41,8 @@ use File::Versions 'make_backup';
 
 =head1 DESCRIPTION
 
-This module was released to CPAN as a helper module for
-L<C::Template>. It contains simple functions which assist in automatic
-generation of C programs.
+This module contains functions which assist in automatic generation of
+C programs.
 
 =head1 FUNCTIONS
 
@@ -91,6 +91,8 @@ sub convert_to_c_string
 }
 
 =head2 ch_files
+
+    my $hfile = ch_files ($c_file_name);
 
 Make a .h filename from a .c filename. Back up both C and .h files.
 
@@ -457,6 +459,59 @@ sub remove_quotes
     return $string;
 }
 
+=head2 linein
+
+    my $intext = linein ($infile);
+
+Given a file F<$infile>, this reads the file in and replaces the text
+C<#linein> in the file with a C line directive.
+
+=cut
+
+sub linein
+{
+    my ($infile) = @_;
+    my $intext = '';
+    open my $in, "<:encoding(utf8)", $infile or die "Can't open $infile: $!";
+    while (<$in>) {
+	if (/#linein/) {
+	    my $line = $. + 1;
+	    s/#linein/#line $line "$infile"/;
+	}
+	$intext .= $_;
+    }
+    close $in or die $!;
+    return $intext;
+}
+
+=head2 lineout
+
+    lineout ($outtext, $outfile);
+
+Given a C output text C<$outtext> and a file name F<$outfile>, this
+writes out the text to F<$outfile>, replacing the text C<#lineout>
+with a line directive.
+
+=cut
+
+sub lineout
+{
+    my ($outtext, $outfile) = @_;
+
+    my @outlines = split /\n/, $outtext;
+    open my $out, ">:encoding(utf8)", $outfile or die $!;
+    for (my $i = 0; $i <= $#outlines; $i++) {
+	if ($outlines[$i] =~ /#lineout/) {
+	    my $line = $i + 1;
+	    print $out "#line $line \"$outfile\"\n";
+	}
+	else {
+	    print $out $outlines[$i], "\n";
+	}
+    }
+    close $out or die $!;
+}
+
 =head1 SEE ALSO
 
 =over
@@ -476,5 +531,7 @@ Bullock. They may be copied, used, modified and distributed under the
 same terms as the Perl programming language.
 
 =cut
+
+
 
 1;
