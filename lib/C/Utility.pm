@@ -1,71 +1,39 @@
-=head1 NAME
-
-C::Utility - utilities for generating C programs
-
-=cut
-
 package C::Utility;
-require Exporter;
-
-@ISA = qw(Exporter);
-
-@EXPORT_OK = qw/
-                   convert_to_c_string
-                   convert_to_c_string_pc
-                   valid_c_variable
-                   hash_to_c_file
-                   ch_files
-                   print_top_h_wrapper
-                   print_bottom_h_wrapper
-                   escape_string
-                   line_directive
-                   c_to_h_name
-                   brute_force_line
-                   add_lines
-		   remove_quotes
-		   linein lineout
-               /;
-
-%EXPORT_TAGS = (
-    'all' => \@EXPORT_OK,
-);
-
 use warnings;
 use strict;
+
+require Exporter;
+
+our @ISA = qw(Exporter);
+
+our @EXPORT_OK = qw/
+		   add_lines
+		   brute_force_line
+		   c_string
+		   c_to_h_name
+		   ch_files
+		   convert_to_c_string
+		   convert_to_c_string_pc
+		   escape_string
+		   hash_to_c_file
+		   line_directive
+		   linein lineout
+		   print_bottom_h_wrapper
+		   print_top_h_wrapper
+		   remove_quotes
+		   stamp_file
+		   valid_c_variable
+               /;
+
+our %EXPORT_TAGS = (
+    'all' => \@EXPORT_OK,
+);
 
 our $VERSION = '0.005';
 
 use Carp;
 use File::Spec;
 use File::Versions 'make_backup';
-
-=head1 DESCRIPTION
-
-This module contains functions which assist in automatic generation of
-C programs.
-
-=head1 FUNCTIONS
-
-=head2  convert_to_c_string
-
-   my $c_string = convert_to_c_string ($perl_string);
-
-This converts a Perl string into a C string. For example, it converts
-
-    my $string =<<EOF;
-    The quick "brown" fox
-    jumped over the lazy dog.
-    EOF
-
-into
-
-    "The quick \"brown\" fox\n"
-    "jumped over the lazy dog.\n"
-
-It also removes backslashes from before the @ symbol, so \@ is
-transformed to @.
-
-=cut
 
 sub convert_to_c_string
 {
@@ -77,7 +45,9 @@ sub convert_to_c_string
     $text =~ s/\\/\\\\/g;
     # Escape double quotes
     $text = escape_string ($text);
-    # Undo damage
+    # If there was a backslash before a quote, as in \", the first
+    # regex above converted it to \\", and then escape_string
+    # converted that to \\\".
     $text =~ s/\\\\"/\\"/g;
     # Remove backslashes from before the @ symbol.
     $text =~ s/\\\@/@/g;
@@ -90,13 +60,10 @@ sub convert_to_c_string
     return $text;
 }
 
-=head2 ch_files
-
-    my $hfile = ch_files ($c_file_name);
-
-Make a .h filename from a .c filename. Back up both C and .h files.
-
-=cut
+sub c_string
+{
+    goto & convert_to_c_string;
+}
 
 sub ch_files
 {
@@ -115,16 +82,6 @@ sub ch_files
     return $h_file_name;
 }
 
-=head2 convert_to_c_pc
-
-    my $c_string = convert_to_c_pc ($string);     
-
-As L</convert_to_c> but also with % (the percent character) converted
-to a double percent, %%. This is for generating strings which may be
-used as C format strings.
-
-=cut
-
 sub convert_to_c_string_pc
 {
     my ($text) = @_;
@@ -132,29 +89,12 @@ sub convert_to_c_string_pc
     return convert_to_c_string ($text);
 }
 
-=head2 escape_string
-
-   my $escaped_string = escape_string ($normal_string);
-
-Escape double quotes (") in a string with a backslash.
-
-=cut
-
 sub escape_string
 {
     my ($text) = @_;
     $text =~ s/\"/\\\"/g;
     return $text;
 }
-
-=head2  c_to_h_name
-
-    my $h_file = c_to_h_name ("frog.c");
-    # $h_file = "frog.h".
-
-Make a .h file name from a .c file name.
-
-=cut
 
 sub c_to_h_name
 {
@@ -179,15 +119,6 @@ unsigned goto while enum void const signed volatile/;
 
 my $reserved_words_re = join '|', @reserved_words;
 
-=head2 valid_c_variable
-
-    valid_c_variable ($variable_name);
-
-This returns 1 if C<$variable_name> is a valid C variable, the
-undefined value otherwise.
-
-=cut
-
 sub valid_c_variable
 {
     my ($variable_name) = @_;
@@ -201,15 +132,6 @@ sub valid_c_variable
 # Wrapper name
 # BKB 2009-10-05 14:09:41
 
-=head2 wrapper_name
-
-    my $wrapper = wrapper_name ($file_name);
-
-Given a file name, return a suitable C preprocessor wrapper name based
-on the file name.
-
-=cut
-
 sub wrapper_name
 {
     my ($string) = @_;
@@ -220,24 +142,6 @@ sub wrapper_name
     my $wrapper_name = uc $string;
     return $wrapper_name;
 }
-
-=head2 print_top_h_wrapper
-
-    print_top_h_wrapper ($file_handle, $file_name);
-    # Prints #ifndef wrapper at top of file.
-
-Print an "include wrapper" for a .h file to C<$file_handle>. For
-example,
-
-    #ifndef MY_FILE
-    #define MY_FILE
-
-The name of the wrapper comes from L</wrapper_name> applied to
-C<$file_name>.
-
-See also L</print_bottom_h_wrapper>.
-
-=cut
 
 sub print_top_h_wrapper
 {
@@ -261,20 +165,6 @@ sub print_out
     }
 }
 
-=head2 print_bottom_h_wrapper
-
-    print_bottom_h_wrapper ($file_handle, $file_name);
-
-Print the bottom part of an include wrapper for a .h file to
-C<$file_handle>.
-
-The name of the wrapper comes from L</wrapper_name> applied to
-C<$file_name>.
-
-See also L</print_top_h_wrapper>.
-
-=cut
-
 sub print_bottom_h_wrapper
 {
     my ($fh, $file_name) = @_;
@@ -285,17 +175,6 @@ EOF
     print_out ($fh, $wrapper);
 }
 
-=head2 print_include
-
-    print_include ($file_handle, $file_name);
-
-Print an #include statement for a .h file named C<$file_name> to
-C<$file_handle>:
-
-    #include "file.h"
-
-=cut
-
 sub print_include
 {
     my ($fh, $h_file_name) = @_;
@@ -303,44 +182,6 @@ sub print_include
 #include "$h_file_name"
 EOF
 }
-
-=head2 hash_to_c_file
-
-    hash_to_c_file ($c_file_name, \%hash);
-
-Output a Perl hash as a set of const char * strings. For example,
-
-    hash_to_c_file ('my.c', { version => '0.01', author => 'Michael Caine' });
-
-prints
-
-    #include "my.h"
-    const char * version = "0.01";
-    const char * author = "Michael Caine";
-
-to F<my.c>, and 
-
-    #ifndef MY_H
-    #define MY_H
-    extern const char * version;
-    extern const char * author;
-    #endif
-
-to F<my.h>.
-
-The keys of the hash are checked with L</valid_c_variable>, and the
-routine dies if they are not valid C variable names.
-
-A third argument, C<$prefix>, contains an optional prefix to add to
-all the variable names:
-
-    hash_to_c_file ('that.c', {ok => 'yes'}, 'super_');
-
-prints
-
-    const char * super_ok = "yes";
-
-=cut
 
 sub hash_to_c_file
 {
@@ -367,19 +208,6 @@ sub hash_to_c_file
     close $h_out or die $!;
 }
 
-=head2 line_directive
-
-     line_directive ($fh, 42, "file.x")
-
-prints
-
-     #line 42 "file.x"
-
-This prints a C preprocessor line directive to the file specified by
-C<$fh>.
-
-=cut
-
 sub line_directive
 {
     my ($output, $line_number, $file_name) = @_;
@@ -387,15 +215,6 @@ sub line_directive
 	unless $line_number =~ /^\d+$/;
     print_out ($output, "#line $line_number \"$file_name\"\n");
 }
-
-=head2 brute_force_line
-
-    brute_force_line ($input_file, $output_file);
-
-Put #line directives on every line of a file. This is a fix used to
-force line numbers into a file before it is processed by L<Template>.
-
-=cut
 
 sub brute_force_line
 {
@@ -409,15 +228,6 @@ sub brute_force_line
     close $input or die $!;
     close $output or die $!;
 }
-
-=head2 add_lines
-
-    my $text = add_lines ($file);
-
-Replace strings of the form #line in the file specified by C<$file>
-with a C-style line directive before it is processed by L<Template>.
-
-=cut
 
 sub add_lines
 {
@@ -441,32 +251,12 @@ sub add_lines
     return $text;
 }
 
-=head2 remove_quotes
-
-    my $unquoted_string = remove_quotes ($string);
-
-This removes the leading and trailing quotes from C<$string>. It also
-removes the "joining quotes" in composite C strings. Thus input of the
-form B<"composite " "C" " string"> is converted into B<composite C
-string> without the quotes.
-
-=cut
-
 sub remove_quotes
 {
     my ($string) = @_;
     $string =~ s/^"|"$|"\s*"//g;
     return $string;
 }
-
-=head2 linein
-
-    my $intext = linein ($infile);
-
-Given a file F<$infile>, this reads the file in and replaces the text
-C<#linein> in the file with a C line directive.
-
-=cut
 
 sub linein
 {
@@ -483,16 +273,6 @@ sub linein
     close $in or die $!;
     return $intext;
 }
-
-=head2 lineout
-
-    lineout ($outtext, $outfile);
-
-Given a C output text C<$outtext> and a file name F<$outfile>, this
-writes out the text to F<$outfile>, replacing the text C<#lineout>
-with a line directive.
-
-=cut
 
 sub lineout
 {
@@ -511,27 +291,6 @@ sub lineout
     }
     close $out or die $!;
 }
-
-=head1 SEE ALSO
-
-=over
-
-=item L<C::Template>
-
-=back
-
-=head1 AUTHOR
-
-Ben Bullock, <bkb@cpan.org>
-
-=head1 COPYRIGHT AND LICENSE
-
-This module and its associated files are copyright (C) 2012 Ben
-Bullock. They may be copied, used, modified and distributed under the
-same terms as the Perl programming language.
-
-=cut
-
 
 
 1;

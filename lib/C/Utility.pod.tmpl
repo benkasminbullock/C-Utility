@@ -1,0 +1,247 @@
+[% start_year=2012 %]
+=head1 NAME
+
+C::Utility - utilities for generating C programs
+
+=cut
+
+=head1 DESCRIPTION
+
+This module contains functions which assist in automatic generation of
+C programs.
+
+=head1 FUNCTIONS
+
+=head2  convert_to_c_string
+
+   my $c_string = convert_to_c_string ($perl_string);
+
+This converts a Perl string into a C string. For example, it converts
+
+    my $string =<<EOF;
+    The quick "brown" fox
+    jumped over the lazy dog.
+    EOF
+
+into
+
+    "The quick \"brown\" fox\n"
+    "jumped over the lazy dog.\n"
+
+It also removes backslashes from before the @ symbol, so \@ is
+transformed to @.
+
+=cut
+
+=head2 c_string
+
+Alias for L</convert_to_c_string>.
+
+=cut
+
+=head2 ch_files
+
+    my $hfile = ch_files ($c_file_name);
+
+Make a .h filename from a .c filename. Back up both C and .h files.
+
+=cut
+
+=head2 convert_to_c_pc
+
+    my $c_string = convert_to_c_pc ($string);     
+
+As L</convert_to_c> but also with % (the percent character) converted
+to a double percent, %%. This is for generating strings which may be
+used as C format strings.
+
+=cut
+
+=head2 escape_string
+
+   my $escaped_string = escape_string ($normal_string);
+
+Escape double quotes (") in a string with a backslash.
+
+=cut
+
+=head2  c_to_h_name
+
+    my $h_file = c_to_h_name ("frog.c");
+    # $h_file = "frog.h".
+
+Make a .h file name from a .c file name.
+
+=cut
+
+=head2 valid_c_variable
+
+    valid_c_variable ($variable_name);
+
+This returns 1 if C<$variable_name> is a valid C variable, the
+undefined value otherwise.
+
+=cut
+
+=head2 wrapper_name
+
+    my $wrapper = wrapper_name ($file_name);
+
+Given a file name, return a suitable C preprocessor wrapper name based
+on the file name.
+
+=cut
+
+=head2 print_top_h_wrapper
+
+    print_top_h_wrapper ($file_handle, $file_name);
+    # Prints #ifndef wrapper at top of file.
+
+Print an "include wrapper" for a .h file to C<$file_handle>. For
+example,
+
+    #ifndef MY_FILE
+    #define MY_FILE
+
+The name of the wrapper comes from L</wrapper_name> applied to
+C<$file_name>.
+
+See also L</print_bottom_h_wrapper>.
+
+=cut
+
+=head2 print_bottom_h_wrapper
+
+    print_bottom_h_wrapper ($file_handle, $file_name);
+
+Print the bottom part of an include wrapper for a .h file to
+C<$file_handle>.
+
+The name of the wrapper comes from L</wrapper_name> applied to
+C<$file_name>.
+
+See also L</print_top_h_wrapper>.
+
+=cut
+
+=head2 print_include
+
+    print_include ($file_handle, $file_name);
+
+Print an #include statement for a .h file named C<$file_name> to
+C<$file_handle>:
+
+    #include "file.h"
+
+=cut
+
+=head2 hash_to_c_file
+
+    hash_to_c_file ($c_file_name, \%hash);
+
+Output a Perl hash as a set of const char * strings. For example,
+
+    hash_to_c_file ('my.c', { version => '0.01', author => 'Michael Caine' });
+
+prints
+
+    #include "my.h"
+    const char * version = "0.01";
+    const char * author = "Michael Caine";
+
+to F<my.c>, and 
+
+    #ifndef MY_H
+    #define MY_H
+    extern const char * version;
+    extern const char * author;
+    #endif
+
+to F<my.h>.
+
+The keys of the hash are checked with L</valid_c_variable>, and the
+routine dies if they are not valid C variable names.
+
+A third argument, C<$prefix>, contains an optional prefix to add to
+all the variable names:
+
+    hash_to_c_file ('that.c', {ok => 'yes'}, 'super_');
+
+prints
+
+    const char * super_ok = "yes";
+
+=cut
+
+=head2 line_directive
+
+     line_directive ($fh, 42, "file.x")
+
+prints
+
+     #line 42 "file.x"
+
+This prints a C preprocessor line directive to the file specified by
+C<$fh>.
+
+=cut
+
+=head2 brute_force_line
+
+    brute_force_line ($input_file, $output_file);
+
+Put #line directives on every line of a file. This is a fix used to
+force line numbers into a file before it is processed by L<Template>.
+
+=cut
+
+=head2 add_lines
+
+    my $text = add_lines ($file);
+
+Replace strings of the form #line in the file specified by C<$file>
+with a C-style line directive before it is processed by L<Template>.
+
+=cut
+
+=head2 remove_quotes
+
+    my $unquoted_string = remove_quotes ($string);
+
+This removes the leading and trailing quotes from C<$string>. It also
+removes the "joining quotes" in composite C strings. Thus input of the
+form B<"composite " "C" " string"> is converted into B<composite C
+string> without the quotes.
+
+=cut
+
+=head2 linein
+
+    my $intext = linein ($infile);
+
+Given a file F<$infile>, this reads the file in and replaces the text
+C<#linein> in the file with a C line directive.
+
+=cut
+
+=head2 lineout
+
+    lineout ($outtext, $outfile);
+
+Given a C output text C<$outtext> and a file name F<$outfile>, this
+writes out the text to F<$outfile>, replacing the text C<#lineout>
+with a line directive.
+
+=cut
+
+=head1 SEE ALSO
+
+=over
+
+=item L<C::Template>
+
+=back
+
+[% INCLUDE "author" %]
+
+

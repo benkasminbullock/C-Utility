@@ -4,4 +4,6 @@
 \.gitignore
 ^MYMETA\.(json|yml)$
 ^Makefile$
-^build\.pl$
+^(build|make-pod)\.pl$
+^xt/.*\.t$
+^lib/C/Utility\.pod\.tmpl$
