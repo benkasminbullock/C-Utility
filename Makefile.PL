@@ -4,7 +4,7 @@ use ExtUtils::MakeMaker;
 
 my $pm = 'lib/C/Utility.pm';
 my $pod = 'lib/C/Utility.pod';
-#my $repo = 'https://github.com/benkasminbullock/C-Utility';
+my $repo = 'https://github.com/benkasminbullock/C-Utility';
 
 WriteMakefile (
     NAME => 'C::Utility',
@@ -17,12 +17,12 @@ WriteMakefile (
 	'File::Versions' => 0,
 	'File::Spec' => 0,
     },
-    # META_MERGE => {
-    #     resources => {
-    #         repository => $repo,
-    #         bugtracker => "$repo/issues",
-    #     },
-    # },
+    META_MERGE => {
+        resources => {
+            repository => $repo,
+            bugtracker => "$repo/issues",
+        },
+    },
     # Passes 5.6.2 at CPANTESTERS as of version 0.003.
     MIN_PERL_VERSION => '5.006001',
 );

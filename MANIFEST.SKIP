@@ -7,3 +7,4 @@
 ^(build|make-pod)\.pl$
 ^xt/.*\.t$
 ^lib/C/Utility\.pod\.tmpl$
+^examples/.*-out\.txt$
