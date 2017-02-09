@@ -213,7 +213,7 @@ appropriate line directive.
     stamp_file ($fh);
 
 Add a stamp to file handle C<$fh> containing the name of the program
-which created it, and the time of the timestamp.
+which created it, and the time of generation.
 
 The name of the C file output can be added as a second argument:
 
@@ -237,19 +237,30 @@ This function was added in version 0.006.
 
 =over
 
+=item Carp
+
+L<Carp> is used to report errors.
+
 =item File::Spec
 
 L<File::Spec> is used to get the base name of the file from the
-argument to L</hash_to_c_file>.
+argument to L</hash_to_c_file>, and to get the absolute name of the
+file in L</add_lines>.
 
 =item File::Versions
 
 L<File::Versions> is used to back up files
 
-=item Carp
-
-L<Carp> is used to report errors.
-
 =back
+
+=head1 HISTORY
+
+Most of the functions in this module are for supporting automated C
+code generators.
+
+[% info.colon %] was on CPAN, but then deleted between version 0.005
+and version 0.006. I don't know of anyone who was using the module,
+but I decided to restore it to CPAN anyway, since I'm still using and
+maintaining it, and it might be useful to somebody.
 
 [% INCLUDE "author" %]
