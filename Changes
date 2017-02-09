@@ -1,5 +1,11 @@
 Revision history for perl module C::Utility
 
+0.006 2017-02-09
+
+* Documentation
+* hash_to_c_file returns the value of the generated .h file
+* New function "stamp_file"
+
 0.005 2014-02-26
 
 * Add "make-c-text" executable to distribution.

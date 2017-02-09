@@ -1,9 +1,19 @@
 [% start_year=2012 %]
+[% MACRO example(file) BLOCK %]
+[%- pl = file _ ".pl" -%]
+[%- out = file _ "-out.txt" -%]
+[% INCLUDE $pl | xtidy %]
+
+produces output
+
+[% INCLUDE $out | xtidy %]
+
+(This example is included as L<F<[% pl %]>|https://api.metacpan.org/source/BKB/[% info.name %]-[% info.version %]/examples/[% pl %]> in the distribution.)
+[% END %]
+
 =head1 NAME
 
 C::Utility - utilities for generating C programs
-
-=cut
 
 =head1 DESCRIPTION
 
@@ -16,54 +26,40 @@ C programs.
 
    my $c_string = convert_to_c_string ($perl_string);
 
-This converts a Perl string into a C string. For example, it converts
+This converts a Perl string into a C string. For example,
 
-    my $string =<<EOF;
-    The quick "brown" fox
-    jumped over the lazy dog.
-    EOF
-
-into
-
-    "The quick \"brown\" fox\n"
-    "jumped over the lazy dog.\n"
+[% example("fox") %]
 
 It also removes backslashes from before the @ symbol, so \@ is
 transformed to @.
 
-=cut
+=head2 convert_to_c_string_pc
+
+    my $c_string = convert_to_c_string_pc ($string);     
+
+As L</convert_to_c_string>, but also with % (the percent character)
+converted to a double percent, %%. This is for generating strings
+which may be used as C format strings without generating an error
+because of embedded percent characters.
+
+[% example("fox-pc") %]
 
 =head2 c_string
 
 Alias for L</convert_to_c_string>.
 
-=cut
-
 =head2 ch_files
 
     my $hfile = ch_files ($c_file_name);
 
-Make a .h filename from a .c filename. Back up both C and .h files.
-
-=cut
-
-=head2 convert_to_c_pc
-
-    my $c_string = convert_to_c_pc ($string);     
-
-As L</convert_to_c> but also with % (the percent character) converted
-to a double percent, %%. This is for generating strings which may be
-used as C format strings.
-
-=cut
+This makes a .h filename from a .c filename, and backs up both C and
+.h files using L<File::Versions>. See also L</c_to_h_name>.
 
 =head2 escape_string
 
    my $escaped_string = escape_string ($normal_string);
 
 Escape double quotes (") in a string with a backslash.
-
-=cut
 
 =head2  c_to_h_name
 
@@ -72,25 +68,25 @@ Escape double quotes (") in a string with a backslash.
 
 Make a .h file name from a .c file name.
 
-=cut
-
 =head2 valid_c_variable
 
     valid_c_variable ($variable_name);
 
 This returns 1 if C<$variable_name> is a valid C variable, the
-undefined value otherwise.
-
-=cut
+undefined value otherwise. It tests for two things, first that the
+argument only contains the allowed characters for a C variable, and
+second that the argument is not a C keyword like "goto" or "volatile".
 
 =head2 wrapper_name
 
     my $wrapper = wrapper_name ($file_name);
 
-Given a file name, return a suitable C preprocessor wrapper name based
-on the file name.
-
-=cut
+Given a file name, this returns a suitable C preprocessor wrapper name
+based on the file name. The preprocessor wrapper name is just the
+uppercase version of the file name with hyphens and dots replaced with
+underscores. This does not strip out directory paths from
+C<$file_name>, since it would usually be an error to include a
+particular directory path in a header file's wrapper.
 
 =head2 print_top_h_wrapper
 
@@ -104,11 +100,10 @@ example,
     #define MY_FILE
 
 The name of the wrapper comes from L</wrapper_name> applied to
-C<$file_name>.
+C<$file_name>. If C<$file_handle> is a scalar reference, this
+concatenates the wrapper to the scalar.
 
 See also L</print_bottom_h_wrapper>.
-
-=cut
 
 =head2 print_bottom_h_wrapper
 
@@ -120,9 +115,10 @@ C<$file_handle>.
 The name of the wrapper comes from L</wrapper_name> applied to
 C<$file_name>.
 
-See also L</print_top_h_wrapper>.
+If C<$file_handle> is a scalar reference, this concatenates the
+wrapper to the scalar.
 
-=cut
+See also L</print_top_h_wrapper>.
 
 =head2 print_include
 
@@ -133,31 +129,13 @@ C<$file_handle>:
 
     #include "file.h"
 
-=cut
-
 =head2 hash_to_c_file
 
-    hash_to_c_file ($c_file_name, \%hash);
+    my $h_file = hash_to_c_file ($c_file_name, \%hash);
 
 Output a Perl hash as a set of const char * strings. For example,
 
-    hash_to_c_file ('my.c', { version => '0.01', author => 'Michael Caine' });
-
-prints
-
-    #include "my.h"
-    const char * version = "0.01";
-    const char * author = "Michael Caine";
-
-to F<my.c>, and 
-
-    #ifndef MY_H
-    #define MY_H
-    extern const char * version;
-    extern const char * author;
-    #endif
-
-to F<my.h>.
+[% example("michael-caine") %]
 
 The keys of the hash are checked with L</valid_c_variable>, and the
 routine dies if they are not valid C variable names.
@@ -171,7 +149,8 @@ prints
 
     const char * super_ok = "yes";
 
-=cut
+The behaviour of returning the name of the header file was added in
+version 0.006.
 
 =head2 line_directive
 
@@ -181,19 +160,19 @@ prints
 
      #line 42 "file.x"
 
-This prints a C preprocessor line directive to the file specified by
-C<$fh>.
+to C<$fh>. This prints a C preprocessor line directive to the file
+specified by C<$fh>. If C<$fh> is a scalar reference, it concatenates
+the line directive to the end of it.
 
-=cut
+
 
 =head2 brute_force_line
 
     brute_force_line ($input_file, $output_file);
 
-Put #line directives on every line of a file. This is a fix used to
-force line numbers into a file before it is processed by L<Template>.
-
-=cut
+Read C<$input_file>, put #line directives on every single line, and
+write that to C<$output_file>. This is a fix used to force line
+numbers into a file before it is processed by L<Template>.
 
 =head2 add_lines
 
@@ -201,8 +180,6 @@ force line numbers into a file before it is processed by L<Template>.
 
 Replace strings of the form #line in the file specified by C<$file>
 with a C-style line directive before it is processed by L<Template>.
-
-=cut
 
 =head2 remove_quotes
 
@@ -213,26 +190,40 @@ removes the "joining quotes" in composite C strings. Thus input of the
 form B<"composite " "C" " string"> is converted into B<composite C
 string> without the quotes.
 
-=cut
-
 =head2 linein
 
     my $intext = linein ($infile);
 
-Given a file F<$infile>, this reads the file in and replaces the text
-C<#linein> in the file with a C line directive.
-
-=cut
+Given a file F<$infile>, this opens the file, reads it in, replaces
+the text C<#linein> in the file with a C line directive referring to
+the original file, then returns the complete text as its return value.
 
 =head2 lineout
 
     lineout ($outtext, $outfile);
 
 Given a C output text C<$outtext> and a file name F<$outfile>, this
-writes out the text to F<$outfile>, replacing the text C<#lineout>
-with a line directive.
+writes out the text to F<$outfile>, replacing C<#lineout> with an
+appropriate line directive.
 
-=cut
+[% example("lineout") %]
+
+=head2 stamp_file
+
+    stamp_file ($fh);
+
+Add a stamp to file handle C<$fh> containing the name of the program
+which created it, and the time of the timestamp.
+
+The name of the C file output can be added as a second argument:
+
+    stamp_file ($fh, $name);
+
+If C<$fh> is a scalar reference, the stamp is concatenated to it.
+
+[% example("line-directive") %]
+
+This function was added in version 0.006.
 
 =head1 SEE ALSO
 
@@ -242,6 +233,23 @@ with a line directive.
 
 =back
 
+=head1 DEPENDENCIES
+
+=over
+
+=item File::Spec
+
+L<File::Spec> is used to get the base name of the file from the
+argument to L</hash_to_c_file>.
+
+=item File::Versions
+
+L<File::Versions> is used to back up files
+
+=item Carp
+
+L<Carp> is used to report errors.
+
+=back
+
 [% INCLUDE "author" %]
-
-

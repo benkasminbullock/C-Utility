@@ -6,3 +6,4 @@ blib/*
 pm_to_blib
 lib/C/Utility.pod
 MANIFEST
+examples/*-out.txt
