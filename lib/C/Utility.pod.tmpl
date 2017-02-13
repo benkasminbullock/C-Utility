@@ -164,8 +164,6 @@ to C<$fh>. This prints a C preprocessor line directive to the file
 specified by C<$fh>. If C<$fh> is a scalar reference, it concatenates
 the line directive to the end of it.
 
-
-
 =head2 brute_force_line
 
     brute_force_line ($input_file, $output_file);
@@ -178,12 +176,11 @@ numbers into a file before it is processed by L<Template>.
 
     my $text = add_lines ($file);
 
-Read the text of the specified file C<$file>, and replace strings of
-the form #line in the file with a C-style line directive before it is
-processed by L<Template>. Also add a line directive to the first line
-of the file. C<$file> must be in the UTF-8 encoding. The line
-directives are given the full path name of the file using
-L<File::Spec/rel2abs>.
+Read C<$file>, and replace strings of the form #line in the file with
+a C-style line directive using C<$file> before it is processed by
+L<Template>. Also add a line directive to the first line of the
+file. C<$file> must be in the UTF-8 encoding. The line directives are
+given the full path name of the file using L<File::Spec/rel2abs>.
 
 =head2 remove_quotes
 
@@ -207,8 +204,9 @@ the original file, then returns the complete text as its return value.
     lineout ($outtext, $outfile);
 
 Given a C output text C<$outtext> and a file name F<$outfile>, this
-writes out the text to F<$outfile>, replacing C<#lineout> with an
-appropriate line directive.
+writes out the text to F<$outfile>, replacing the text C<#lineout>
+with an appropriate line directive using C<$outfile> as the file name
+and the lines of the file as the line numbers.
 
 [% example("lineout") %]
 
@@ -228,14 +226,6 @@ If C<$fh> is a scalar reference, the stamp is concatenated to it.
 [% example("line-directive") %]
 
 This function was added in version 0.006.
-
-=head1 SEE ALSO
-
-=over
-
-=item L<C::Template>
-
-=back
 
 =head1 DEPENDENCIES
 
