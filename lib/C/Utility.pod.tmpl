@@ -178,8 +178,12 @@ numbers into a file before it is processed by L<Template>.
 
     my $text = add_lines ($file);
 
-Replace strings of the form #line in the file specified by C<$file>
-with a C-style line directive before it is processed by L<Template>.
+Read the text of the specified file C<$file>, and replace strings of
+the form #line in the file with a C-style line directive before it is
+processed by L<Template>. Also add a line directive to the first line
+of the file. C<$file> must be in the UTF-8 encoding. The line
+directives are given the full path name of the file using
+L<File::Spec/rel2abs>.
 
 =head2 remove_quotes
 
