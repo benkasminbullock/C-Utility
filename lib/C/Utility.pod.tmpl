@@ -24,7 +24,22 @@ corresponding to git commit L<[% commit.commit %]|[% info.repo
 =head1 DESCRIPTION
 
 This module contains functions which assist in automatic generation of
-C programs.
+C programs.  L</convert_to_c_string> converts a string into a string
+with characters correctly escaped for use in a C
+program. L</convert_to_c_string_pc> does the same thing plus escaping
+percent signs so that they may be used as format strings for
+printf. L</ch_files> makes a header file name from a C file
+name. L</escape_string> escapes double quotes. L</valid_c_variable>
+checks whether a string is valid as a C variable. L</wrapper_name>
+returns a C preprocessor wrapper name. L</print_top_h_wrapper> prints
+the top wrapper for a header file, and L</print_bottom_h_wrapper>
+prints the bottom part. L</print_include> prints C<#include>
+statements. L</hash_to_c_file> converts a Perl hash into a compilable
+C file with the keys as C strings. L</line_directive> prints a C line
+directive. L</brute_force_line> puts line directives on every
+line. L</add_lines> converts the string #line to line directives as do
+L</linein> and L</lineout>. L</remove_quotes> removes leading and
+trailing quotes. L</stamp_file> adds a printed stamp to a file handle.
 
 =head1 FUNCTIONS
 
@@ -170,6 +185,8 @@ to C<$fh>. This prints a C preprocessor line directive to the file
 specified by C<$fh>. If C<$fh> is a scalar reference, it concatenates
 the line directive to the end of it.
 
+[% example("line-directive") %]
+
 =head2 brute_force_line
 
     brute_force_line ($input_file, $output_file);
@@ -229,7 +246,7 @@ The name of the C file output can be added as a second argument:
 
 If C<$fh> is a scalar reference, the stamp is concatenated to it.
 
-[% example("line-directive") %]
+[% example("stamp-file") %]
 
 This function was added in version 0.006.
 
