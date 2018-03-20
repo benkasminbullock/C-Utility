@@ -16,6 +16,7 @@ WriteMakefile (
     PREREQ_PM => {
 	'File::Versions' => 0,
 	'File::Spec' => 0,
+	'File::Slurper' => 0,
     },
     META_MERGE => {
         resources => {
