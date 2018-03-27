@@ -12,6 +12,7 @@ binmode STDERR, ":encoding(utf8)";
 use Perl::Build 'get_info';
 use Perl::Build::Dist qw/bad_modules depend/;
 use Perl::Build::Pod 'get_dep_section';
+use JSON::Parse 'json_file_to_perl';
 
 my $info = get_info (base => "$Bin/..");
 
@@ -36,6 +37,23 @@ SKIP: {
 	for my $m (@modules) {
 	    like ($deps, qr!L<\Q$m\E(?:/.*)?>!, "Documented dependence on $m");
 	}
+    }
+    my $meta = "$Bin/../MYMETA.json";
+    if (! -f $meta) {
+	warn "No $meta";
+    }
+    my $m = json_file_to_perl ($meta);
+    my $rr = $m->{prereqs}{runtime}{requires};
+
+    for (@modules) {
+	if (/^(?:Carp)$/) {
+	    next;
+	}
+	ok (defined $rr->{$_}, "Dep on $_");
+    }
+    my @rr = grep !/perl|Carp/, keys %$rr;
+    for my $m (@rr) {
+	like ($deps, qr!<\Q$m\E(?:/.*)?>!, "runtime requires in deps for $m");
     }
 };
 
