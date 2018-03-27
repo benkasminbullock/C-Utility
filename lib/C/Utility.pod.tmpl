@@ -250,6 +250,19 @@ If C<$fh> is a scalar reference, the stamp is concatenated to it.
 
 This function was added in version 0.006.
 
+=head2 read_includes
+
+    my $includes = read_includes ($file);
+
+Read lines of the form
+
+    #include "some.h"
+
+from C<$file> and return the list of included files as an array
+reference.
+
+This function was added in version 0.008.
+
 =head1 DEPENDENCIES
 
 =over
@@ -267,6 +280,14 @@ file in L</add_lines>.
 =item File::Versions
 
 L<File::Versions> is used to back up files
+
+=item C::Tokenize
+
+L<C::Tokenize> is used by L</read_includes>.
+
+=item File::Slurper
+
+L<File::Slurper> is used by L</read_includes>.
 
 =back
 
