@@ -35,11 +35,17 @@ returns a C preprocessor wrapper name. L</print_top_h_wrapper> prints
 the top wrapper for a header file, and L</print_bottom_h_wrapper>
 prints the bottom part. L</print_include> prints C<#include>
 statements. L</hash_to_c_file> converts a Perl hash into a compilable
-C file with the keys as C strings. L</line_directive> prints a C line
+C file with the keys as C strings. L</remove_quotes> removes leading
+and trailing quotes. L</stamp_file> adds a printed stamp to a file
+handle.
+
+The module contains various line directive related
+functions. L</line_directive> prints a C line
 directive. L</brute_force_line> puts line directives on every
-line. L</add_lines> converts the string #line to line directives as do
-L</linein> and L</lineout>. L</remove_quotes> removes leading and
-trailing quotes. L</stamp_file> adds a printed stamp to a file handle.
+line. L</add_lines> converts the string #line to line
+directives. L</linein> and L</lineout> offer a preprocessor and
+postprocessor to add line numbers to files made from
+templates. 
 
 =head1 FUNCTIONS
 
@@ -48,18 +54,23 @@ trailing quotes. L</stamp_file> adds a printed stamp to a file handle.
     my $text = add_lines ($file);
 
 Read C<$file>, and replace strings of the form #line in the file with
-a C-style line directive using C<$file> before it is processed by
-L<Template>. Also add a line directive to the first line of the
-file. C<$file> must be in the UTF-8 encoding. The line directives are
-given the full path name of the file using L<File::Spec/rel2abs>.
+a C-style line directive using C<$file>. Also add a line directive to
+the first line of the file. C<$file> must be in the UTF-8
+encoding. The line directives are given the full path name of the file
+using L<File::Spec/rel2abs>.
+
+I recommend using L</lineout> and L</linein> rather than this
+function.
 
 =head2 brute_force_line
 
     brute_force_line ($input_file, $output_file);
 
 Read C<$input_file>, put #line directives on every single line, and
-write that to C<$output_file>. This is a fix used to force line
-numbers into a file before it is processed by L<Template>.
+write that to C<$output_file>.
+
+I recommend using L</lineout> and L</linein> rather than this
+function.
 
 =head2 c_string
 
@@ -70,14 +81,15 @@ Alias for L</convert_to_c_string>.
     my $h_file = c_to_h_name ("frog.c");
     # $h_file = "frog.h".
 
-Make a .h file name from a .c file name.
+Make a C<.h> file name from a C<.c> file name.
 
 =head2 ch_files
 
     my $hfile = ch_files ($c_file_name);
 
-This makes a .h filename from a .c filename, and backs up both C and
-.h files using L<File::Versions>. See also L</c_to_h_name>.
+This makes a C<.h> filename from a C<.c> filename, and backs up both
+the C and the C<.h> files using L<File::Versions>. See also
+L</c_to_h_name>.
 
 =head2 convert_to_c_string
 
@@ -94,10 +106,10 @@ transformed to @.
 
     my $c_string = convert_to_c_string_pc ($string);     
 
-As L</convert_to_c_string>, but also with % (the percent character)
-converted to a double percent, %%. This is for generating strings
-which may be used as C format strings without generating an error
-because of embedded percent characters.
+This is similar to L</convert_to_c_string>, but it also converts the
+percent character C<%> to a double percent, C<%%>. This is for
+generating strings which may be used as C format strings without
+generating an error because of embedded percent characters.
 
 [% example("fox-pc") %]
 
@@ -105,25 +117,32 @@ because of embedded percent characters.
 
    my $escaped_string = escape_string ($normal_string);
 
-Escape double quotes (") in a string with a backslash.
+This returns the value of the argument with double quotes C<"> escaped
+with a backslash.
 
 =head2 hash_to_c_file
 
     my $h_file = hash_to_c_file ($c_file_name, \%hash);
 
-Output a Perl hash as a set of const char * strings. For example,
+This turns a Perl hash into a set of C<const char *> strings and
+writes it to a C file specified by C<$c_file_name>, and a header file
+with a similar name. For example,
 
 [% example("michael-caine") %]
+
+The return value is the name of the header file used.
 
 The keys of the hash are checked with L</valid_c_variable>, and the
 routine dies if they are not valid C variable names.
 
-A third argument, C<$prefix>, contains an optional prefix to add to
-all the variable names:
+A third argument, C<$prefix>, may contain an optional prefix to add to
+all the variable names.
+
+For example,
 
     hash_to_c_file ('that.c', {ok => 'yes'}, 'super_');
 
-prints
+outputs
 
     const char * super_ok = "yes";
 
@@ -132,15 +151,17 @@ version 0.006.
 
 =head2 line_directive
 
+This prints a C preprocessor line directive to the file specified by
+C<$fh>. If C<$fh> is a scalar reference, it concatenates the line
+directive to the end of it. For example,
+
      line_directive ($fh, 42, "file.x")
 
 prints
 
      #line 42 "file.x"
 
-to C<$fh>. This prints a C preprocessor line directive to the file
-specified by C<$fh>. If C<$fh> is a scalar reference, it concatenates
-the line directive to the end of it.
+to C<$fh>. 
 
 [% example("line-directive") %]
 
@@ -249,27 +270,37 @@ If C<$fh> is a scalar reference, the stamp is concatenated to it.
 
 [% example("stamp-file") %]
 
+This is not a very useful function because of the following nuisance
+side effect. When using a system based on "make" and "diff" to build
+your C project, the date and time in the stamp made by C<stamp_file>
+forces unnecessary rebuilds by changing your file each time it is run,
+even when the actual program contents have not changed. I tend not to
+use this version of this function any more but use a substitute one
+which doesn't add the time and date to the file.
+
 This function was added in version 0.006.
 
 =head2 valid_c_variable
 
-    valid_c_variable ($variable_name);
+    my $ok = valid_c_variable ($variable_name);
 
 This returns 1 if C<$variable_name> is a valid C variable, the
-undefined value otherwise. It tests for two things, first that the
-argument only contains the allowed characters for a C variable, and
-second that the argument is not a C keyword like "goto" or "volatile".
+undefined value otherwise. It tests for two things. First that the
+argument only contains the allowed characters, C<[0-9a-zA-Z_]>, for a
+C variable, and second that the argument is not a C keyword like
+C<goto> or C<volatile>. The rejected word list contains C99 keywords
+like C<_Bool>. See L<C::Tokenize/$reserved_re> for exactly what is
+rejected.
 
 =head2 wrapper_name
 
     my $wrapper = wrapper_name ($file_name);
 
 Given a file name, this returns a suitable C preprocessor wrapper name
-based on the file name. The preprocessor wrapper name is just the
-uppercase version of the file name with hyphens and dots replaced with
-underscores. This does not strip out directory paths from
-C<$file_name>, since it would usually be an error to include a
-particular directory path in a header file's wrapper.
+based on the file name. The wrapper name is the uppercase version of
+the file name with hyphens and dots replaced with underscores.
+
+This does not strip out directory paths from C<$file_name>.
 
 =head1 DEPENDENCIES
 
