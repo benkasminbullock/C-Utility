@@ -4,8 +4,9 @@ use strict;
 use File::Spec;
 use Carp;
 use File::Versions 'make_backup';
-use File::Slurper 'read_text';
+use File::Slurper qw/read_text write_text/;
 use C::Tokenize '$comment_re';
+use Text::LineNumber;
 
 require Exporter;
 
@@ -263,20 +264,45 @@ sub remove_quotes
     $string =~ s/^"|"$|"\s*"//g;
     return $string;
 }
+#use Data::Dumper;
+sub linedirective
+{
+    my ($intext, $file, $directive) = @_;
+    die unless $intext && $file && $directive;
+    # This module is pretty reliable for line numbering.
+    my $tln = Text::LineNumber->new ($intext);
+    my %renumbered;
+    # Uniquifier for the lines.
+    my $count = 0;
+    # This is unlikely to occur.
+    my $tag = 'ABRACADABRA';
+    # Watch for blue-moon occurences
+    die if $intext =~ /$tag\d+/;
+    while ($intext =~ s/^\Q$directive/$tag$count$tag/sm) {
+	$count++;
+    }
+    # "pos" doesn't work well with s///g, so now we need to match the tags
+    # one by one.
+    while ($intext =~ /($tag\d+$tag)/g) {
+	my $key = $1;
+	my $pos = pos ($intext);
+	my $line = $tln->off2lnr ($pos);
+#	print "Position $pos in $file = line $line.\n";
+	$renumbered{$key} = $line;
+    }
+#print Dumper (\%renumbered);
+    $intext =~ s/($tag\d+$tag)/#line $renumbered{$1} "$file"/g;
+    # Check for failures. We already checked this doesn't occur
+    # naturally in the file above.
+    die if $intext =~ /$tag\d+$tag/;
+    return $intext;
+}
 
 sub linein
 {
     my ($infile) = @_;
-    my $intext = '';
-    open my $in, "<:encoding(utf8)", $infile or die "Can't open $infile: $!";
-    while (<$in>) {
-	if (/#linein/) {
-	    my $line = $. + 1;
-	    s/#linein/#line $line "$infile"/;
-	}
-	$intext .= $_;
-    }
-    close $in or die $!;
+    my $intext = read_text ($infile);
+    $intext = linedirective ($intext, $infile, '#linein');
     return $intext;
 }
 
@@ -284,18 +310,8 @@ sub lineout
 {
     my ($outtext, $outfile) = @_;
 
-    my @outlines = split /\n/, $outtext;
-    open my $out, ">:encoding(utf8)", $outfile or die $!;
-    for (my $i = 0; $i <= $#outlines; $i++) {
-	if ($outlines[$i] =~ /#lineout/) {
-	    my $line = $i + 1;
-	    print $out "#line $line \"$outfile\"\n";
-	}
-	else {
-	    print $out $outlines[$i], "\n";
-	}
-    }
-    close $out or die $!;
+    $outtext = linedirective ($outtext, $outfile, "#lineout");
+    write_text ($outfile, $outtext);
 }
 
 sub stamp_file
