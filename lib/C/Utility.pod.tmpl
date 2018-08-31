@@ -43,7 +43,43 @@ trailing quotes. L</stamp_file> adds a printed stamp to a file handle.
 
 =head1 FUNCTIONS
 
-=head2  convert_to_c_string
+=head2 add_lines
+
+    my $text = add_lines ($file);
+
+Read C<$file>, and replace strings of the form #line in the file with
+a C-style line directive using C<$file> before it is processed by
+L<Template>. Also add a line directive to the first line of the
+file. C<$file> must be in the UTF-8 encoding. The line directives are
+given the full path name of the file using L<File::Spec/rel2abs>.
+
+=head2 brute_force_line
+
+    brute_force_line ($input_file, $output_file);
+
+Read C<$input_file>, put #line directives on every single line, and
+write that to C<$output_file>. This is a fix used to force line
+numbers into a file before it is processed by L<Template>.
+
+=head2 c_string
+
+Alias for L</convert_to_c_string>.
+
+=head2 c_to_h_name
+
+    my $h_file = c_to_h_name ("frog.c");
+    # $h_file = "frog.h".
+
+Make a .h file name from a .c file name.
+
+=head2 ch_files
+
+    my $hfile = ch_files ($c_file_name);
+
+This makes a .h filename from a .c filename, and backs up both C and
+.h files using L<File::Versions>. See also L</c_to_h_name>.
+
+=head2 convert_to_c_string
 
    my $c_string = convert_to_c_string ($perl_string);
 
@@ -65,90 +101,11 @@ because of embedded percent characters.
 
 [% example("fox-pc") %]
 
-=head2 c_string
-
-Alias for L</convert_to_c_string>.
-
-=head2 ch_files
-
-    my $hfile = ch_files ($c_file_name);
-
-This makes a .h filename from a .c filename, and backs up both C and
-.h files using L<File::Versions>. See also L</c_to_h_name>.
-
 =head2 escape_string
 
    my $escaped_string = escape_string ($normal_string);
 
 Escape double quotes (") in a string with a backslash.
-
-=head2  c_to_h_name
-
-    my $h_file = c_to_h_name ("frog.c");
-    # $h_file = "frog.h".
-
-Make a .h file name from a .c file name.
-
-=head2 valid_c_variable
-
-    valid_c_variable ($variable_name);
-
-This returns 1 if C<$variable_name> is a valid C variable, the
-undefined value otherwise. It tests for two things, first that the
-argument only contains the allowed characters for a C variable, and
-second that the argument is not a C keyword like "goto" or "volatile".
-
-=head2 wrapper_name
-
-    my $wrapper = wrapper_name ($file_name);
-
-Given a file name, this returns a suitable C preprocessor wrapper name
-based on the file name. The preprocessor wrapper name is just the
-uppercase version of the file name with hyphens and dots replaced with
-underscores. This does not strip out directory paths from
-C<$file_name>, since it would usually be an error to include a
-particular directory path in a header file's wrapper.
-
-=head2 print_top_h_wrapper
-
-    print_top_h_wrapper ($file_handle, $file_name);
-    # Prints #ifndef wrapper at top of file.
-
-Print an "include wrapper" for a .h file to C<$file_handle>. For
-example,
-
-    #ifndef MY_FILE
-    #define MY_FILE
-
-The name of the wrapper comes from L</wrapper_name> applied to
-C<$file_name>. If C<$file_handle> is a scalar reference, this
-concatenates the wrapper to the scalar.
-
-See also L</print_bottom_h_wrapper>.
-
-=head2 print_bottom_h_wrapper
-
-    print_bottom_h_wrapper ($file_handle, $file_name);
-
-Print the bottom part of an include wrapper for a .h file to
-C<$file_handle>.
-
-The name of the wrapper comes from L</wrapper_name> applied to
-C<$file_name>.
-
-If C<$file_handle> is a scalar reference, this concatenates the
-wrapper to the scalar.
-
-See also L</print_top_h_wrapper>.
-
-=head2 print_include
-
-    print_include ($file_handle, $file_name);
-
-Print an #include statement for a .h file named C<$file_name> to
-C<$file_handle>:
-
-    #include "file.h"
 
 =head2 hash_to_c_file
 
@@ -187,33 +144,6 @@ the line directive to the end of it.
 
 [% example("line-directive") %]
 
-=head2 brute_force_line
-
-    brute_force_line ($input_file, $output_file);
-
-Read C<$input_file>, put #line directives on every single line, and
-write that to C<$output_file>. This is a fix used to force line
-numbers into a file before it is processed by L<Template>.
-
-=head2 add_lines
-
-    my $text = add_lines ($file);
-
-Read C<$file>, and replace strings of the form #line in the file with
-a C-style line directive using C<$file> before it is processed by
-L<Template>. Also add a line directive to the first line of the
-file. C<$file> must be in the UTF-8 encoding. The line directives are
-given the full path name of the file using L<File::Spec/rel2abs>.
-
-=head2 remove_quotes
-
-    my $unquoted_string = remove_quotes ($string);
-
-This removes the leading and trailing quotes from C<$string>. It also
-removes the "joining quotes" in composite C strings. Thus input of the
-form B<"composite " "C" " string"> is converted into B<composite C
-string> without the quotes.
-
 =head2 linein
 
     my $intext = linein ($infile);
@@ -241,6 +171,69 @@ The general use case for this would be to write text which has been
 processed by a template processor like L<Template>, adding line
 numbers to the output.
 
+=head2 print_bottom_h_wrapper
+
+    print_bottom_h_wrapper ($file_handle, $file_name);
+
+Print the bottom part of an include wrapper for a .h file to
+C<$file_handle>.
+
+The name of the wrapper comes from L</wrapper_name> applied to
+C<$file_name>.
+
+If C<$file_handle> is a scalar reference, this concatenates the
+wrapper to the scalar.
+
+See also L</print_top_h_wrapper>.
+
+=head2 print_include
+
+    print_include ($file_handle, $file_name);
+
+Print an #include statement for a .h file named C<$file_name> to
+C<$file_handle>:
+
+    #include "file.h"
+
+=head2 print_top_h_wrapper
+
+    print_top_h_wrapper ($file_handle, $file_name);
+    # Prints #ifndef wrapper at top of file.
+
+Print an "include wrapper" for a .h file to C<$file_handle>. For
+example,
+
+    #ifndef MY_FILE
+    #define MY_FILE
+
+The name of the wrapper comes from L</wrapper_name> applied to
+C<$file_name>. If C<$file_handle> is a scalar reference, this
+concatenates the wrapper to the scalar.
+
+See also L</print_bottom_h_wrapper>.
+
+=head2 read_includes
+
+    my $includes = read_includes ($file);
+
+Read lines of the form
+
+    #include "some.h"
+
+from C<$file> and return the list of included files as an array
+reference.
+
+This function was added in version 0.008.
+
+=head2 remove_quotes
+
+    my $unquoted_string = remove_quotes ($string);
+
+This removes the leading and trailing quotes from C<$string>. It also
+removes the "joining quotes" in composite C strings. Thus input of the
+form B<"composite " "C" " string"> is converted into B<composite C
+string> without the quotes.
+
 =head2 stamp_file
 
     stamp_file ($fh);
@@ -258,18 +251,25 @@ If C<$fh> is a scalar reference, the stamp is concatenated to it.
 
 This function was added in version 0.006.
 
-=head2 read_includes
+=head2 valid_c_variable
 
-    my $includes = read_includes ($file);
+    valid_c_variable ($variable_name);
 
-Read lines of the form
+This returns 1 if C<$variable_name> is a valid C variable, the
+undefined value otherwise. It tests for two things, first that the
+argument only contains the allowed characters for a C variable, and
+second that the argument is not a C keyword like "goto" or "volatile".
 
-    #include "some.h"
+=head2 wrapper_name
 
-from C<$file> and return the list of included files as an array
-reference.
+    my $wrapper = wrapper_name ($file_name);
 
-This function was added in version 0.008.
+Given a file name, this returns a suitable C preprocessor wrapper name
+based on the file name. The preprocessor wrapper name is just the
+uppercase version of the file name with hyphens and dots replaced with
+underscores. This does not strip out directory paths from
+C<$file_name>, since it would usually be an error to include a
+particular directory path in a header file's wrapper.
 
 =head1 DEPENDENCIES
 
