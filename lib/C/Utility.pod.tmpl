@@ -28,28 +28,17 @@ corresponding to git commit L<[% commit.commit %]|[% info.repo
 =head1 DESCRIPTION
 
 This module contains functions which assist in automatic generation of
-C programs.  L</convert_to_c_string> converts a string into a string
-with characters correctly escaped for use in a C
+C programs. For work with strings, L</convert_to_c_string> converts a
+string into a string with characters correctly escaped for use in a C
 program. L</convert_to_c_string_pc> does the same thing plus escaping
 percent signs so that they may be used as format strings for
-printf. L</ch_files> makes a header file name from a C file
-name. L</escape_string> escapes double quotes. L</valid_c_variable>
-checks whether a string is valid as a C variable. L</wrapper_name>
-returns a C preprocessor wrapper name. L</print_top_h_wrapper> prints
-the top wrapper for a header file, and L</print_bottom_h_wrapper>
-prints the bottom part. L</print_include> prints C<#include>
-statements. L</hash_to_c_file> converts a Perl hash into a compilable
-C file with the keys as C strings. L</remove_quotes> removes leading
-and trailing quotes. L</stamp_file> adds a printed stamp to a file
-handle.
+printf. L</escape_string> escapes double quotes. L</valid_c_variable>
+checks whether a string is valid as a C variable. 
 
 The module contains various line directive related
-functions. L</line_directive> prints a C line
-directive. L</brute_force_line> puts line directives on every
-line. L</add_lines> converts the string #line to line
-directives. L</linein> and L</lineout> offer a preprocessor and
-postprocessor to add line numbers to files made from
-templates. 
+functions. L</line_directive> prints a C line directive. L</linein>
+and L</lineout> offer a preprocessor and postprocessor to add line
+numbers to files made from templates.
 
 =head1 EXPORTS
 
@@ -195,6 +184,10 @@ to C<$fh>.
 
 [% example("line-directive") %]
 
+This function is useful if you cannot remember the syntax for line
+directives, since it checks that your line number is valid. I
+currently only use this in one place.
+
 =head2 linein
 
     my $intext = linein ($infile);
@@ -203,9 +196,8 @@ Given a file F<$infile>, this opens the file, reads it in, replaces
 the text C<#linein> in the file with a C line directive referring to
 the original file, then returns the complete text as its return value.
 
-The general use case for this would be to read in a template before
-processing with L<Template> or a similar module, to get the line
-numbers of the input template.
+I use this to read in a template before processing with L<Template> to
+add the line numbers of the input template.
 
 =head2 lineout
 
@@ -218,9 +210,8 @@ and the lines of the file as the line numbers.
 
 [% example("lineout") %]
 
-The general use case for this would be to write text which has been
-processed by a template processor like L<Template>, adding line
-numbers to the output.
+I use this to write text which has been processed by L<Template> to
+add line numbers to the output.
 
 =head2 print_bottom_h_wrapper
 
@@ -299,6 +290,8 @@ removes the "joining quotes" in composite C strings. Thus input of the
 form B<"composite " "C" " string"> is converted into B<composite C
 string> without the quotes.
 
+This function probably should not be in this module at all.
+
 =head2 stamp_file
 
     stamp_file ($fh);
@@ -346,6 +339,8 @@ the file name with hyphens and dots replaced with underscores.
 
 This does not strip out directory paths from C<$file_name>.
 
+This is not a useful function, and I do not use it anywhere.
+
 =head1 DEPENDENCIES
 
 =over
@@ -353,6 +348,10 @@ This does not strip out directory paths from C<$file_name>.
 =item Carp
 
 L<Carp> is used to report errors.
+
+=item C::Tokenize
+
+The regular expressions of L<C::Tokenize> are used in various places.
 
 =item File::Spec
 
@@ -364,10 +363,6 @@ file in L</add_lines>.
 
 L<File::Versions> is used to back up files
 
-=item C::Tokenize
-
-The regular expressions of L<C::Tokenize> are used in various places.
-
 =item File::Slurper
 
 L<File::Slurper> is used to read and write text files. This has the
@@ -376,7 +371,7 @@ the UTF-8 encoding.
 
 =item Text::LineNumber
 
-L<Text::LineNumber> is used by L</linein> and L</lineout>.
+L<Text::LineNumber> is used by L</linein> and L</lineout>. It's not used by L</line> or L</brute_force_line>
 
 =back
 
