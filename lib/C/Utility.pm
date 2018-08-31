@@ -37,7 +37,7 @@ our %EXPORT_TAGS = (
     'all' => \@EXPORT_OK,
 );
 
-our $VERSION = '0.009';
+our $VERSION = '0.010';
 
 sub convert_to_c_string
 {

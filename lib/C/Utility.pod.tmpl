@@ -222,6 +222,10 @@ Given a file F<$infile>, this opens the file, reads it in, replaces
 the text C<#linein> in the file with a C line directive referring to
 the original file, then returns the complete text as its return value.
 
+The general use case for this would be to read in a template before
+processing with L<Template> or a similar module, to get the line
+numbers of the input template.
+
 =head2 lineout
 
     lineout ($outtext, $outfile);
@@ -232,6 +236,10 @@ with an appropriate line directive using C<$outfile> as the file name
 and the lines of the file as the line numbers.
 
 [% example("lineout") %]
+
+The general use case for this would be to write text which has been
+processed by a template processor like L<Template>, adding line
+numbers to the output.
 
 =head2 stamp_file
 
@@ -288,6 +296,10 @@ L<C::Tokenize> is used by L</read_includes>.
 =item File::Slurper
 
 L<File::Slurper> is used by L</read_includes>.
+
+=item Text::LineNumber
+
+L<Text::LineNumber> is used by L</linein> and L</lineout>.
 
 =back
 

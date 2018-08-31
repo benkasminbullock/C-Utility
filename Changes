@@ -1,5 +1,10 @@
 Revision history for perl module C::Utility
 
+0.010 2018-08-31
+
+* Better line numbering in lineout and linein
+* Dependency on Text::LineNumber introduced
+
 0.009 2018-03-27
 
 * Dependency bug fix
