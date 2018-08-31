@@ -5,7 +5,7 @@ use File::Spec;
 use Carp;
 use File::Versions 'make_backup';
 use File::Slurper qw/read_text write_text/;
-use C::Tokenize '$comment_re';
+use C::Tokenize qw/$comment_re $include $reserved_re/;
 use Text::LineNumber;
 
 require Exporter;
@@ -37,7 +37,7 @@ our %EXPORT_TAGS = (
     'all' => \@EXPORT_OK,
 );
 
-our $VERSION = '0.010';
+our $VERSION = '0.011';
 
 sub convert_to_c_string
 {
@@ -111,23 +111,11 @@ sub c_to_h_name
     return $h_file_name;
 }
 
-# This list of reserved words in C is from
-# http://crasseux.com/books/ctutorial/Reserved-words-in-C.html
-
-my @reserved_words = sort {length $b <=> length $a} qw/auto if break
-int case long char register continue return default short do sizeof
-double static else struct entry switch extern typedef float union for
-unsigned goto while enum void const signed volatile/;
-
-# A regular expression to match reserved words in C.
-
-my $reserved_words_re = join '|', @reserved_words;
-
 sub valid_c_variable
 {
     my ($variable_name) = @_;
     if ($variable_name !~ /^[A-Za-z_][A-Za-z_0-9]+$/ ||
-	$variable_name =~ /^(?:$reserved_words_re)$/) {
+	$variable_name =~ /^(?:$reserved_re)$/) {
 	return;
     }
     return 1;
@@ -333,9 +321,11 @@ sub read_includes
 {
     my ($file) = @_;
     my $text = read_text ($file);
+    # Remove all the comments from the file so that things like
+    # /*#include "something.h"*/ don't create false positives.
     $text =~ s/$comment_re//g;
     my @hfiles;
-    while ($text =~ /#include\s*"(.*?)"/g) {
+    while ($text =~ /$include/g) {
 	push @hfiles, $1;
     }
     return \@hfiles;

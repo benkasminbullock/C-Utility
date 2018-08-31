@@ -15,6 +15,10 @@ produces output
 
 C::Utility - utilities for generating C programs
 
+=head1 SYNOPSIS
+
+   use C::Utility ':all';
+
 =head1 VERSION
 
 This documents [% info.colon %] version [% info.version %]
@@ -47,6 +51,13 @@ directives. L</linein> and L</lineout> offer a preprocessor and
 postprocessor to add line numbers to files made from
 templates. 
 
+=head1 EXPORTS
+
+All the functions are exported on demand. Nothing is exported by
+default. An export tag C<:all> exports all the functions.
+
+    use C::Utility ':all';
+
 =head1 FUNCTIONS
 
 =head2 add_lines
@@ -57,10 +68,12 @@ Read C<$file>, and replace strings of the form #line in the file with
 a C-style line directive using C<$file>. Also add a line directive to
 the first line of the file. C<$file> must be in the UTF-8
 encoding. The line directives are given the full path name of the file
-using L<File::Spec/rel2abs>.
+using L<File::Spec/rel2abs>. The return value is the text of the input
+file with the line directives added.
 
-I recommend using L</lineout> and L</linein> rather than this
-function.
+I recommend using L</linein> in combination with L</lineout> rather
+than this function, since it does not properly handle line directives
+for generated parts of the C file.
 
 =head2 brute_force_line
 
@@ -69,8 +82,9 @@ function.
 Read C<$input_file>, put #line directives on every single line, and
 write that to C<$output_file>.
 
-I recommend using L</lineout> and L</linein> rather than this
-function.
+I recommend using L</linein> in combination with L</lineout> rather
+than this function, since it does not properly handle line directives
+for generated parts of the C file.
 
 =head2 c_string
 
@@ -81,7 +95,10 @@ Alias for L</convert_to_c_string>.
     my $h_file = c_to_h_name ("frog.c");
     # $h_file = "frog.h".
 
-Make a C<.h> file name from a C<.c> file name.
+Make a C<.h> file name from a C<.c> file name. 
+
+This is not a very useful function, and I do not use it anywhere any
+more.
 
 =head2 ch_files
 
@@ -89,18 +106,27 @@ Make a C<.h> file name from a C<.c> file name.
 
 This makes a C<.h> filename from a C<.c> filename, and backs up both
 the C and the C<.h> files using L<File::Versions>. See also
-L</c_to_h_name>.
+L</c_to_h_name>. It dies if the input C<$c_file_name> does not end in
+C<.c>.
+
+This is not a very useful function, and I use it in only one place.
 
 =head2 convert_to_c_string
 
-   my $c_string = convert_to_c_string ($perl_string);
+    my $c_string = convert_to_c_string ($perl_string);
 
-This converts a Perl string into a C string. For example,
+This converts a Perl string into a C string by converting backslashes
+to double backslashes, escaping double quotes with L</escape_string>,
+turning newlines into C<\n> characters, and adding double quotes.
+
+For example,
 
 [% example("fox") %]
 
 It also removes backslashes from before the @ symbol, so \@ is
-transformed to @.
+transformed to @. Newlines within the input string are turned into
+concatenated strings. Empty inputs are turned into a pair of double
+quotes, C<"">.
 
 =head2 convert_to_c_string_pc
 
@@ -135,8 +161,8 @@ The return value is the name of the header file used.
 The keys of the hash are checked with L</valid_c_variable>, and the
 routine dies if they are not valid C variable names.
 
-A third argument, C<$prefix>, may contain an optional prefix to add to
-all the variable names.
+An optional third argument may contain a prefix to add to all the
+variable names.
 
 For example,
 
@@ -145,6 +171,10 @@ For example,
 outputs
 
     const char * super_ok = "yes";
+
+The use case of this function is a convenient way to make small C
+configuration files. I currently do not use this function at all,
+since it tends to cause about as many problems as it solves.
 
 The behaviour of returning the name of the header file was added in
 version 0.006.
@@ -205,6 +235,8 @@ C<$file_name>.
 If C<$file_handle> is a scalar reference, this concatenates the
 wrapper to the scalar.
 
+I barely use this function and don't consider it to be very useful.
+
 See also L</print_top_h_wrapper>.
 
 =head2 print_include
@@ -215,6 +247,9 @@ Print an #include statement for a .h file named C<$file_name> to
 C<$file_handle>:
 
     #include "file.h"
+
+I do not currently use this function anywhere, and don't consider it
+useful.
 
 =head2 print_top_h_wrapper
 
@@ -231,18 +266,27 @@ The name of the wrapper comes from L</wrapper_name> applied to
 C<$file_name>. If C<$file_handle> is a scalar reference, this
 concatenates the wrapper to the scalar.
 
+I barely use this function and don't consider it to be very useful.
+
 See also L</print_bottom_h_wrapper>.
 
 =head2 read_includes
 
     my $includes = read_includes ($file);
 
-Read lines of the form
+Given a C file C<$file>, read the file in and find all lines of the
+form
 
     #include "some.h"
 
-from C<$file> and return the list of included files as an array
-reference.
+or
+
+    #include <another.h>
+
+and return the list of included files as an array reference. See
+L<C::Tokenize/$include> for the regular expression to match the
+includes. It skips C<#include> statements within comments using
+L<C::Tokenize/$comment_re>.
 
 This function was added in version 0.008.
 
@@ -322,11 +366,13 @@ L<File::Versions> is used to back up files
 
 =item C::Tokenize
 
-L<C::Tokenize> is used by L</read_includes>.
+The regular expressions of L<C::Tokenize> are used in various places.
 
 =item File::Slurper
 
-L<File::Slurper> is used by L</read_includes>.
+L<File::Slurper> is used to read and write text files. This has the
+caveat that in some places this module assumes your C source files use
+the UTF-8 encoding.
 
 =item Text::LineNumber
 
