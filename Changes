@@ -1,5 +1,10 @@
 Revision history for perl module C::Utility
 
+0.012 2018-09-01
+
+* Bug fixes in linein/lineout
+* Extended examples of use of linein/lineout in documentation
+
 0.011 2018-09-01
 
 * Use more of C::Tokenize's regexes instead of duplicating
