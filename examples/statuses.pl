@@ -7,7 +7,7 @@ use C::Utility qw/linein lineout/;
 chdir $Bin or die $!;
 my %vars = (statuses => [qw/good great super fantastic/]);
 my $tt = Template->new (INCLUDE_DIR => '.');
-my $textin = linein ('status.c.tmpl');
+my $textin = linein ('status-c-tmpl');
 $tt->process (\$textin, \%vars, \my $textout);
 lineout ($textout, 'status.c');
 

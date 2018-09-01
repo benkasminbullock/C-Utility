@@ -13,7 +13,7 @@ binmode STDOUT, ":encoding(utf8)";
 binmode STDERR, ":encoding(utf8)";
 
 chdir $Bin or die $!;
-my $textin = linein ('status.c.tmpl');
+my $textin = linein ('status-c-tmpl');
 # This is like what is described in ../examples/statuses.pl, but I
 # don't want to introduce a dependency on Template here.
 my @statuses = (qw/good great super fantastic/);
@@ -24,8 +24,8 @@ for (@statuses) {
 $textin =~ s/STATUSES/$statuses_out/;
 lineout ($textin, 'status.c');
 my @l = read_lines ("$Bin/status.c");
-is ($l[0], '#line 2 "status.c.tmpl"');
+is ($l[0], '#line 2 "status-c-tmpl"');
 is ($l[3], '#line 5 "status.c"');
-is ($l[9], '#line 7 "status.c.tmpl"');
+is ($l[9], '#line 7 "status-c-tmpl"');
 unlink ('status.c') or die $!;
 done_testing ();

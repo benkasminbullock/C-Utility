@@ -360,7 +360,7 @@ This is not a useful function, and I do not use it anywhere.
 
 =head2 Line numbering
 
-When using L</linein> and L</lineout>, with L</Template>, your source
+When using L</linein> and L</lineout>, with L<Template>, your source
 file should look something like this:
 
 [% INSERT "status.c.tmpl" | xtidy %]
@@ -373,7 +373,7 @@ when processed as in
 
 [% INCLUDE "statuses.pl" | xtidy %]
 
-where C<$tt> is an instance of L</Template>.
+where C<$tt> is an instance of L<Template>.
 
 You need to specify C<#linein> where your template file starts, and
 C<#lineout> where the automatically generated part starts. This way
