@@ -8,3 +8,4 @@
 ^xt/.*\.t$
 ^lib/C/Utility\.pod\.tmpl$
 ^examples/.*-out\.txt$
+^examples/status\.c$
