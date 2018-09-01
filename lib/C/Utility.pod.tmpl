@@ -28,12 +28,14 @@ corresponding to git commit L<[% commit.commit %]|[% info.repo
 =head1 DESCRIPTION
 
 This module contains functions which assist in automatic generation of
-C programs. For work with strings, L</convert_to_c_string> converts a
-string into a string with characters correctly escaped for use in a C
-program. L</convert_to_c_string_pc> does the same thing plus escaping
+C programs. 
+
+For work with strings, L</convert_to_c_string> converts a Perl string
+into a string with characters correctly escaped for use in a C
+program. L</convert_to_c_string_pc> does the same thing, plus escaping
 percent signs so that they may be used as format strings for
 printf. L</escape_string> escapes double quotes. L</valid_c_variable>
-checks whether a string is valid as a C variable. 
+checks whether a string is valid as a C variable.
 
 The module contains various line directive related
 functions. L</line_directive> prints a C line directive. L</linein>
@@ -363,7 +365,7 @@ This is not a useful function, and I do not use it anywhere.
 When using L</linein> and L</lineout>, with L<Template>, your source
 file should look something like this:
 
-[% INSERT "status.c.tmpl" | xtidy %]
+[% INSERT "status-c-tmpl" | xtidy %]
 
 This results in an output something like this:
 
