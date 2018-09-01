@@ -257,8 +257,6 @@ sub linedirective
 {
     my ($intext, $file, $directive) = @_;
     die unless $intext && $file && $directive;
-    # This module is pretty reliable for line numbering.
-    my $tln = Text::LineNumber->new ($intext);
     my %renumbered;
     # Uniquifier for the lines.
     my $count = 0;
@@ -269,6 +267,10 @@ sub linedirective
     while ($intext =~ s/^\Q$directive/$tag$count$tag/sm) {
 	$count++;
     }
+    # Make the line numbering only after the above substitution, or we
+    # get problems due to changed offsets after the substitution
+    # above.
+    my $tln = Text::LineNumber->new ($intext);
     # "pos" doesn't work well with s///g, so now we need to match the tags
     # one by one.
     while ($intext =~ /($tag\d+$tag)/g) {
@@ -276,9 +278,14 @@ sub linedirective
 	my $pos = pos ($intext);
 	my $line = $tln->off2lnr ($pos);
 #	print "Position $pos in $file = line $line.\n";
-	$renumbered{$key} = $line;
+
+	# The actual line the line directive sends us to is one after
+	# the value the line contains, e.g. on the first line we
+	# should have "#line 2", so we need to add one to the value.
+
+	$renumbered{$key} = $line + 1;
     }
-#print Dumper (\%renumbered);
+#    print Dumper (\%renumbered);
     $intext =~ s/($tag\d+$tag)/#line $renumbered{$1} "$file"/g;
     # Check for failures. We already checked this doesn't occur
     # naturally in the file above.

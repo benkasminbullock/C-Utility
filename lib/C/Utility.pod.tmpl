@@ -62,7 +62,8 @@ file with the line directives added.
 
 I recommend using L</linein> in combination with L</lineout> rather
 than this function, since it does not properly handle line directives
-for generated parts of the C file.
+for generated parts of the C file. See L</Line numbering> for an
+explanation.
 
 =head2 brute_force_line
 
@@ -73,7 +74,8 @@ write that to C<$output_file>.
 
 I recommend using L</linein> in combination with L</lineout> rather
 than this function, since it does not properly handle line directives
-for generated parts of the C file.
+for generated parts of the C file. See L</Line numbering> for an
+explanation.
 
 =head2 c_string
 
@@ -194,10 +196,14 @@ currently only use this in one place.
 
 Given a file F<$infile>, this opens the file, reads it in, replaces
 the text C<#linein> in the file with a C line directive referring to
-the original file, then returns the complete text as its return value.
+the original file, then returns the complete text as its return
+value. Note that the line number in a line directive refers to the
+following line, so if the line directive appears on the first line of
+the file, it should say C<#line 2>, etc.
 
 I use this to read in a template before processing with L<Template> to
-add the line numbers of the input template.
+add the line numbers of the input template. See L</Line numbering> for
+a minimal working example of how.
 
 =head2 lineout
 
@@ -211,7 +217,8 @@ and the lines of the file as the line numbers.
 [% example("lineout") %]
 
 I use this to write text which has been processed by L<Template> to
-add line numbers to the output.
+add line numbers to the output. See L</Line numbering> for a minimal
+working example of how.
 
 =head2 print_bottom_h_wrapper
 
@@ -329,6 +336,14 @@ C<goto> or C<volatile>. The rejected word list contains C99 keywords
 like C<_Bool>. See L<C::Tokenize/$reserved_re> for exactly what is
 rejected.
 
+This function does not check for overlaps with the POSIX list of
+disallowed C variable and function names. There is a huge list of
+things which POSIX forbids, like functions beginning with the three
+letters C<str>, underscores at the start of a variable, and C<_t> at
+the end of a type name, and so on. I don't know of any CPAN module or
+other offering which validates against this giant list of sinful
+names.
+
 =head2 wrapper_name
 
     my $wrapper = wrapper_name ($file_name);
@@ -340,6 +355,34 @@ the file name with hyphens and dots replaced with underscores.
 This does not strip out directory paths from C<$file_name>.
 
 This is not a useful function, and I do not use it anywhere.
+
+=head1 EXAMPLES
+
+=head2 Line numbering
+
+When using L</linein> and L</lineout>, with L</Template>, your source
+file should look something like this:
+
+[% INSERT "status.c.tmpl" | xtidy %]
+
+This results in an output something like this:
+
+[% INSERT "status.c" | xtidy %]
+
+when processed as in
+
+[% INCLUDE "statuses.pl" | xtidy %]
+
+where C<$tt> is an instance of L</Template>.
+
+You need to specify C<#linein> where your template file starts, and
+C<#lineout> where the automatically generated part starts. This way
+compiler error messages will send you to the correct line of the
+file. The functions L</add_lines> and L</brute_force_line> are not
+very useful because they don't add the outgoing lines of the form
+C<#line 5 "status.c"> to the file, and the compiler error messages
+send you on a wild goose chase if the error is in the generated part
+of the file.
 
 =head1 DEPENDENCIES
 
@@ -373,6 +416,28 @@ the UTF-8 encoding.
 
 L<Text::LineNumber> is used by L</linein> and L</lineout>. It's not
 used by L</add_lines> or L</brute_force_line>
+
+=back
+
+=head1 DEFICIENCIES
+
+=over
+
+=item No POSIX compliance
+
+See the discussion under L</valid_c_variable>.
+
+=item Insists on UTF-8 inputs/outputs in some places
+
+See the discussion about L</File::Slurper>. If this is really a
+problem, file a bug report.
+
+=item No trigram support
+
+This module doesn't support ANSI C trigrams like C<??=> for C<#>, for
+people whose keyboards don't have a C<#> key, so you're going to need
+a bigger keyboard if you're a trigram user who insists on using this
+Perl module.
 
 =back
 

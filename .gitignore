@@ -8,3 +8,5 @@ lib/C/Utility.pod
 MANIFEST
 examples/*-out.txt
 C-Utility-[0-9]*
+examples/status.c
+t/status.c
