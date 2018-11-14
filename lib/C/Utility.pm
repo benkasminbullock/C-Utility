@@ -5,7 +5,7 @@ use File::Spec;
 use Carp;
 use File::Versions 'make_backup';
 use File::Slurper qw/read_text write_text/;
-use C::Tokenize qw/$comment_re $include $reserved_re/;
+use C::Tokenize '0.18', qw/$comment_re $include $include_local $reserved_re/;
 use Text::LineNumber;
 
 require Exporter;
@@ -28,6 +28,7 @@ our @EXPORT_OK = qw/
 		       print_bottom_h_wrapper
 		       print_top_h_wrapper
 		       read_includes
+		       read_includes_local
 		       remove_quotes
 		       stamp_file
 		       valid_c_variable
@@ -333,7 +334,21 @@ sub read_includes
     $text =~ s/$comment_re//g;
     my @hfiles;
     while ($text =~ /$include/g) {
-	push @hfiles, $1;
+	push @hfiles, $2;
+    }
+    return \@hfiles;
+}
+
+sub read_includes_local
+{
+    my ($file) = @_;
+    my $text = read_text ($file);
+    # Remove all the comments from the file so that things like
+    # /*#include "something.h"*/ don't create false positives.
+    $text =~ s/$comment_re//g;
+    my @hfiles;
+    while ($text =~ /$include_local/g) {
+	push @hfiles, $2;
     }
     return \@hfiles;
 }

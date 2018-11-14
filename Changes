@@ -1,5 +1,9 @@
 Revision history for perl module C::Utility
 
+0.013 2018-11-13
+
+* Bug fix in read_includes (return value no longer contains #include)
+
 0.012 2018-09-01
 
 * Bug fixes in linein/lineout
